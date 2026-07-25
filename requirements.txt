@@ -1,0 +1,4 @@
+ultralytics==8.4.104
+pygame==2.6.1
+Pillow>=10.4,<13
+opencv-python>=4.10,<5
