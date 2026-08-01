@@ -66,8 +66,10 @@ visible, use front lighting, and avoid parking the phone beside your face.
 
 Video frames are sent from OpenCV directly to the local YOLO model, displayed
 in the preview, and discarded. The app does not implement video capture,
-screenshots, face recognition, analytics, or uploads. `settings.json` stores
-only the controls and local song path.
+screenshots, face recognition, analytics, or uploads. On Windows,
+`%LOCALAPPDATA%\Focus Guard\settings.json` stores only the controls and local
+song path. Existing settings from the project directory are copied there on
+the first run and left in place as a safe fallback.
 
 The model weights download from Ultralytics on first use. Once the model and
 packages are installed, detection itself runs locally.
