@@ -1,13 +1,40 @@
 from __future__ import annotations
 
 import json
+import os
+import sys
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Any
 
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_SETTINGS_PATH = PROJECT_DIR / "settings.json"
+LEGACY_SETTINGS_PATH = PROJECT_DIR / "settings.json"
+SETTINGS_DIRECTORY_NAME = "Focus Guard"
+
+
+def get_default_settings_path(
+    *,
+    platform: str | None = None,
+    environment: Mapping[str, str] | None = None,
+) -> Path:
+    """Return the per-user settings path, retaining the old path elsewhere."""
+    platform_name = sys.platform if platform is None else platform
+    environment_values = os.environ if environment is None else environment
+    local_app_data = environment_values.get("LOCALAPPDATA", "").strip()
+
+    if platform_name == "win32" and local_app_data:
+        return (
+            Path(local_app_data)
+            / SETTINGS_DIRECTORY_NAME
+            / "settings.json"
+        )
+
+    return LEGACY_SETTINGS_PATH
+
+
+DEFAULT_SETTINGS_PATH = get_default_settings_path()
 
 
 @dataclass
@@ -42,26 +69,55 @@ class AppSettings:
         )
 
 
-def load_settings(path: Path = DEFAULT_SETTINGS_PATH) -> AppSettings:
-    if not path.exists():
-        return AppSettings()
-
+def _read_settings(path: Path) -> AppSettings | None:
+    """Read a valid settings file, or return ``None`` when it is unusable."""
     try:
-        raw: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+        raw: Any = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            return None
         allowed = {field.name for field in fields(AppSettings)}
         values = {key: value for key, value in raw.items() if key in allowed}
         return AppSettings(**values).normalized()
     except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        return None
+
+
+def load_settings(path: Path | None = None) -> AppSettings:
+    target_path = DEFAULT_SETTINGS_PATH if path is None else Path(path)
+
+    if target_path.exists():
+        return _read_settings(target_path) or AppSettings()
+
+    should_migrate_legacy = (
+        path is None
+        and target_path != LEGACY_SETTINGS_PATH
+        and LEGACY_SETTINGS_PATH.exists()
+    )
+    if not should_migrate_legacy:
         return AppSettings()
+
+    legacy_settings = _read_settings(LEGACY_SETTINGS_PATH)
+    if legacy_settings is None:
+        return AppSettings()
+
+    try:
+        save_settings(legacy_settings, target_path)
+    except OSError:
+        # A read-only or unavailable app-data directory must not discard the
+        # user's existing settings. Keep using the legacy values for this run.
+        pass
+    return legacy_settings
 
 
 def save_settings(
-    settings: AppSettings, path: Path = DEFAULT_SETTINGS_PATH
+    settings: AppSettings, path: Path | None = None
 ) -> None:
+    target_path = DEFAULT_SETTINGS_PATH if path is None else Path(path)
     clean = settings.normalized()
-    temporary = path.with_suffix(".json.tmp")
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target_path.with_suffix(".json.tmp")
     temporary.write_text(
         json.dumps(asdict(clean), indent=2) + "\n",
         encoding="utf-8",
     )
-    temporary.replace(path)
+    temporary.replace(target_path)
