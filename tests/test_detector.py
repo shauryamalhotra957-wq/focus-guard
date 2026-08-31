@@ -59,6 +59,14 @@ def make_detector(boxes, confidences, classes, *, require_person=True):
 
 
 class PhoneDetectorTests(unittest.TestCase):
+    def test_constructor_rejects_invalid_confidence_before_model_load(self) -> None:
+        with self.assertRaisesRegex(ValueError, "confidence must be greater"):
+            PhoneDetector("unused.pt", 0.0, 18.0, True)
+
+    def test_constructor_rejects_invalid_desk_zone_percentage(self) -> None:
+        with self.assertRaisesRegex(ValueError, "ignore_bottom_percent"):
+            PhoneDetector("unused.pt", 0.45, 100.0, True)
+
     def test_phone_near_primary_person_is_active(self) -> None:
         detector = make_detector(
             boxes=[
