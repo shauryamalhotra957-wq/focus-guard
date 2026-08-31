@@ -31,6 +31,11 @@ class PhoneDetector:
         ignore_bottom_percent: float,
         require_person: bool,
     ) -> None:
+        if not 0.0 < confidence <= 1.0:
+            raise ValueError("confidence must be greater than 0 and at most 1")
+        if not 0.0 <= ignore_bottom_percent < 100.0:
+            raise ValueError("ignore_bottom_percent must be between 0 and 100")
+
         from ultralytics import YOLO
 
         self.model = YOLO(model_name)
