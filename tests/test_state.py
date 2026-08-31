@@ -54,6 +54,22 @@ class FocusPolicyTests(unittest.TestCase):
         self.assertTrue(cleared.cleared)
         self.assertEqual(cleared.phase, Phase.COOLDOWN)
 
+    def test_cooldown_does_not_retrigger_until_phone_leaves(self) -> None:
+        policy = self.make_policy()
+        for second in range(4):
+            policy.update(True, float(second))
+        policy.update(False, 4.0)
+        policy.update(False, 6.0)
+
+        still_present = policy.update(True, 11.0)
+        self.assertEqual(still_present.phase, Phase.WAITING_FOR_CLEAR)
+        self.assertFalse(still_present.triggered)
+
+        policy.update(False, 12.0)
+        cleared = policy.update(False, 14.0)
+        self.assertEqual(cleared.phase, Phase.FOCUSED)
+        self.assertFalse(cleared.phone_in_use)
+
     def test_cooldown_blocks_a_new_alert(self) -> None:
         policy = self.make_policy()
         for second in range(4):
