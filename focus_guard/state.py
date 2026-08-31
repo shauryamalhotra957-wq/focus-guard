@@ -88,6 +88,7 @@ class FocusPolicy:
                 self._clear_started_at = None
                 self._evidence_seconds = 0.0
                 self._cooldown_until = now + self.config.cooldown_seconds
+                self._needs_clear = True
                 return self._snapshot(
                     Phase.COOLDOWN,
                     phone_in_use,
@@ -96,6 +97,14 @@ class FocusPolicy:
                 )
 
             return self._snapshot(Phase.ALERT, phone_in_use)
+
+        if now < self._cooldown_until:
+            self._evidence_seconds = 0.0
+            return self._snapshot(
+                Phase.COOLDOWN,
+                phone_in_use,
+                cooldown_remaining=self._cooldown_until - now,
+            )
 
         if self._needs_clear:
             if phone_in_use:
@@ -110,15 +119,7 @@ class FocusPolicy:
             return self._snapshot(
                 Phase.WAITING_FOR_CLEAR,
                 phone_in_use,
-                cooldown_remaining=max(0.0, self._cooldown_until - now),
-            )
-
-        if now < self._cooldown_until:
-            self._evidence_seconds = 0.0
-            return self._snapshot(
-                Phase.COOLDOWN,
-                phone_in_use,
-                cooldown_remaining=self._cooldown_until - now,
+                cooldown_remaining=0.0,
             )
 
         if phone_in_use:
