@@ -91,11 +91,10 @@ class FocusPolicyTests(unittest.TestCase):
         self.assertEqual(still_present.phase, Phase.WAITING_FOR_CLEAR)
 
         policy.update(False, 21.0)
-        policy.update(False, 22.0)
-        clear = policy.update(False, 23.0)
-        self.assertEqual(clear.phase, Phase.WAITING_FOR_CLEAR)
+        still_waiting = policy.update(False, 22.0)
+        self.assertEqual(still_waiting.phase, Phase.WAITING_FOR_CLEAR)
 
-        armed = policy.update(False, 24.0)
+        armed = policy.update(False, 23.0)
         self.assertEqual(armed.phase, Phase.FOCUSED)
 
     def test_snooze_prevents_evidence_accumulation(self) -> None:

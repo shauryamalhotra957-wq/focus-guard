@@ -115,6 +115,11 @@ class FocusPolicy:
                 elif now - self._clear_started_at >= self.config.clear_seconds:
                     self._needs_clear = False
                     self._clear_started_at = None
+                    return self._snapshot(
+                        Phase.FOCUSED,
+                        phone_in_use,
+                        cooldown_remaining=0.0,
+                    )
 
             return self._snapshot(
                 Phase.WAITING_FOR_CLEAR,
