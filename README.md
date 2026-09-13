@@ -1,5 +1,8 @@
 # Focus Guard
 
+[![CI](https://github.com/shauryamalhotra957-wq/focus-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/shauryamalhotra957-wq/focus-guard/actions) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+
 Focus Guard is a local Windows app that watches for **sustained visible phone
 use during a work session**. When the phone remains in use for the configured
 delay, it plays your selected reminder song. Put the phone down and the audio
