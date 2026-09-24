@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  focus-guard:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - ENV=production
+    command: python tests/benchmark_detector_latency.py
